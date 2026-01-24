@@ -65,14 +65,16 @@ export default function Home() {
         body: JSON.stringify({ image, provider }),
       })
 
+      const data = await response.json()
+
       if (!response.ok) {
-        throw new Error('分析に失敗しました')
+        throw new Error(data.error || '分析に失敗しました')
       }
 
-      const data = await response.json()
       setResult(data)
     } catch (err) {
-      setError('エラーが発生しました。もう一度お試しください。')
+      const errorMessage = err instanceof Error ? err.message : 'エラーが発生しました。もう一度お試しください。'
+      setError(errorMessage)
       console.error(err)
     } finally {
       setAnalyzing(false)

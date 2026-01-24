@@ -185,12 +185,30 @@ export async function POST(request: NextRequest) {
 
     switch (provider) {
       case 'openai':
+        if (!process.env.OPENAI_API_KEY) {
+          return NextResponse.json(
+            { error: 'OpenAI APIキーが設定されていません。.envファイルにOPENAI_API_KEYを設定してください。' },
+            { status: 500 }
+          )
+        }
         parsedResult = await analyzeWithOpenAI(image)
         break
       case 'claude':
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return NextResponse.json(
+            { error: 'Claude APIキーが設定されていません。.envファイルにANTHROPIC_API_KEYを設定してください。' },
+            { status: 500 }
+          )
+        }
         parsedResult = await analyzeWithClaude(image)
         break
       case 'gemini':
+        if (!process.env.GOOGLE_AI_API_KEY) {
+          return NextResponse.json(
+            { error: 'Gemini APIキーが設定されていません。.envファイルにGOOGLE_AI_API_KEYを設定してください。' },
+            { status: 500 }
+          )
+        }
         parsedResult = await analyzeWithGemini(image)
         break
       default:
@@ -203,8 +221,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(parsedResult)
   } catch (error) {
     console.error('Error analyzing image:', error)
+
+    // Provide more specific error messages
+    let errorMessage = '画像の分析中にエラーが発生しました'
+
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        errorMessage = 'APIキーが無効または設定されていません'
+      } else if (error.message.includes('rate limit')) {
+        errorMessage = 'APIの利用制限に達しました。しばらくしてからお試しください'
+      } else if (error.message.includes('quota')) {
+        errorMessage = 'APIの利用枠を超えました'
+      } else {
+        errorMessage = `エラー: ${error.message}`
+      }
+    }
+
     return NextResponse.json(
-      { error: '画像の分析中にエラーが発生しました' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
