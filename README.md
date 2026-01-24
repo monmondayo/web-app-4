@@ -11,7 +11,8 @@
 ## ✨ 特徴
 
 - 📸 **画像アップロード**: ドラッグ&ドロップまたはファイル選択
-- 🤖 **AI分析**: OpenAI GPT-4oによる画像認識と採点
+- 🤖 **複数AI対応**: OpenAI GPT-4o、Claude 3.5 Sonnet、Gemini 1.5 Flashから選択可能
+- 🎯 **UI上で選択**: 使いたいAIをその場で選べる
 - 💬 **名古屋弁コメント**: 「わっち」が辛口で採点
 - 🎨 **派手な演出**: パチンコ台風のド派手なデザイン
 - ✨ **アニメーション**: Framer Motionによる豪華な演出
@@ -21,7 +22,10 @@
 - **Frontend**: Next.js 14 (App Router), React, TypeScript
 - **Styling**: Tailwind CSS
 - **Animation**: Framer Motion
-- **AI**: OpenAI API (GPT-4o)
+- **AI**:
+  - OpenAI API (GPT-4o)
+  - Anthropic API (Claude 3.5 Sonnet)
+  - Google AI API (Gemini 1.5 Flash)
 
 ## 📦 セットアップ
 
@@ -33,19 +37,36 @@ npm install
 
 ### 2. 環境変数の設定
 
-`.env.example`をコピーして`.env`ファイルを作成し、OpenAI APIキーを設定してください:
+`.env.example`をコピーして`.env`ファイルを作成し、使いたいAI APIキーを設定してください:
 
 ```bash
 cp .env.example .env
 ```
 
-`.env`ファイルに以下を記入:
+`.env`ファイルに以下を記入（**使いたいAIのキーのみ設定すればOK**）:
 
-```
+```env
+# OpenAI API (GPT-4o)
 OPENAI_API_KEY=your_openai_api_key_here
+
+# Anthropic API (Claude)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# Google AI API (Gemini)
+GOOGLE_AI_API_KEY=your_google_ai_api_key_here
 ```
 
-OpenAI APIキーは[OpenAI Platform](https://platform.openai.com/api-keys)で取得できます。
+#### APIキーの取得方法
+
+- **OpenAI**: [OpenAI Platform](https://platform.openai.com/api-keys)
+- **Anthropic (Claude)**: [Anthropic Console](https://console.anthropic.com/)
+- **Google AI (Gemini)**: [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+#### おすすめ
+
+- **Gemini 1.5 Flash**: 無料枠あり、高速で手軽に試せる
+- **Claude 3.5 Sonnet**: 高品質な画像分析、GPT-4oより安価な場合も
+- **GPT-4o**: 既存のOpenAIアカウントがあればすぐに使える
 
 ### 3. 開発サーバーの起動
 
@@ -58,9 +79,13 @@ npm run dev
 ## 🎮 使い方
 
 1. トップページで写真をアップロード(ドラッグ&ドロップまたはクリック)
-2. 「名古屋ばえ診断スタート!」ボタンをクリック
-3. AIが分析中...🏯
-4. 結果が派手に表示されます!
+2. **使いたいAIを選択** 🤖🎭✨
+   - 🤖 **OpenAI GPT-4o**: 定番の高精度AI
+   - 🎭 **Claude 3.5 Sonnet**: Anthropicの最新モデル
+   - ✨ **Gemini 1.5 Flash**: Googleの高速・無料枠ありAI
+3. 「名古屋ばえ診断スタート!」ボタンをクリック
+4. AIが分析中...🏯
+5. 結果が派手に表示されます!
    - **スコア**: 0〜100点
    - **キャッチコピー**: 写真の印象
    - **辛口コメント**: 名古屋弁での評価とアドバイス
@@ -81,7 +106,10 @@ AIは以下の基準で採点します:
 
 1. [Vercel](https://vercel.com)にログイン
 2. プロジェクトをインポート
-3. 環境変数`OPENAI_API_KEY`を設定
+3. 環境変数を設定（使いたいAI APIのキーのみ設定）:
+   - `OPENAI_API_KEY`
+   - `ANTHROPIC_API_KEY`
+   - `GOOGLE_AI_API_KEY`
 4. デプロイ!
 
 ## 📝 ライセンス
