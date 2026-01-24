@@ -10,11 +10,14 @@ interface AnalysisResult {
   vibe_tags: string[]
 }
 
+type AIProvider = 'openai' | 'claude' | 'gemini'
+
 export default function Home() {
   const [image, setImage] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [result, setResult] = useState<AnalysisResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [provider, setProvider] = useState<AIProvider>('openai')
 
   const handleImageUpload = useCallback((file: File) => {
     const reader = new FileReader()
@@ -59,7 +62,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ image }),
+        body: JSON.stringify({ image, provider }),
       })
 
       if (!response.ok) {
@@ -158,6 +161,52 @@ export default function Home() {
                     alt="アップロード画像"
                     className="w-full rounded-lg mb-4"
                   />
+
+                  {/* AI選択 */}
+                  <div className="mb-4">
+                    <p className="text-nagoya-gold font-bold mb-2 text-center">
+                      使うAIを選んでちょ！
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      <button
+                        onClick={() => setProvider('openai')}
+                        className={`py-3 px-2 rounded-lg font-bold transition-all ${
+                          provider === 'openai'
+                            ? 'bg-gradient-to-r from-nagoya-gold to-yellow-600 text-black scale-105 border-2 border-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">🤖</div>
+                        <div className="text-xs">OpenAI</div>
+                        <div className="text-xs">GPT-4o</div>
+                      </button>
+                      <button
+                        onClick={() => setProvider('claude')}
+                        className={`py-3 px-2 rounded-lg font-bold transition-all ${
+                          provider === 'claude'
+                            ? 'bg-gradient-to-r from-nagoya-purple to-pink-600 text-white scale-105 border-2 border-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">🎭</div>
+                        <div className="text-xs">Claude</div>
+                        <div className="text-xs">3.5 Sonnet</div>
+                      </button>
+                      <button
+                        onClick={() => setProvider('gemini')}
+                        className={`py-3 px-2 rounded-lg font-bold transition-all ${
+                          provider === 'gemini'
+                            ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white scale-105 border-2 border-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        }`}
+                      >
+                        <div className="text-2xl mb-1">✨</div>
+                        <div className="text-xs">Gemini</div>
+                        <div className="text-xs">1.5 Flash</div>
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="flex gap-4">
                     <button
                       onClick={analyzeImage}

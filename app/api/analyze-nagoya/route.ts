@@ -1,27 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy initialization to avoid build-time errors
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  })
+}
 
-export async function POST(request: NextRequest) {
-  try {
-    const { image } = await request.json()
+function getAnthropic() {
+  return new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  })
+}
 
-    if (!image) {
-      return NextResponse.json(
-        { error: '画像が送信されていません' },
-        { status: 400 }
-      )
-    }
+function getGoogleAI() {
+  if (!process.env.GOOGLE_AI_API_KEY) {
+    throw new Error('Google AI API key is not configured')
+  }
+  return new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY)
+}
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: `あなたは「名古屋のご意見番」として振る舞う、辛口で派手好きなAIキャラクターです。
+const SYSTEM_PROMPT = `あなたは「名古屋のご意見番」として振る舞う、辛口で派手好きなAIキャラクターです。
 ユーザーから送られてきた画像を、独自の「名古屋ばえ基準」で分析し、100点満点で採点し、名古屋弁でコメントしてください。
 
 **キャラクター設定:**
@@ -41,34 +43,162 @@ export async function POST(request: NextRequest) {
   "title": "写真に付けるキャッチコピー(例:味噌カツ級の衝撃！)",
   "comment": "名古屋弁での辛口コメント(100文字程度)。なぜその点数なのかの理由と、もっと名古屋っぽくするためのアドバイスを含めること。",
   "vibe_tags": ["#茶色は正義", "#盛りすぎ注意", "#ロゴドン"] などのハッシュタグを3つ生成
-}`,
-        },
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: 'この画像の名古屋ばえ度を採点してください',
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: image,
-              },
-            },
-          ],
-        },
-      ],
-      response_format: { type: 'json_object' },
-      max_tokens: 1000,
-    })
+}`
 
-    const result = response.choices[0].message.content
-    if (!result) {
-      throw new Error('AIからのレスポンスが空です')
+async function analyzeWithOpenAI(image: string) {
+  const openai = getOpenAI()
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o',
+    messages: [
+      {
+        role: 'system',
+        content: SYSTEM_PROMPT,
+      },
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: 'この画像の名古屋ばえ度を採点してください',
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: image,
+            },
+          },
+        ],
+      },
+    ],
+    response_format: { type: 'json_object' },
+    max_tokens: 1000,
+  })
+
+  const result = response.choices[0].message.content
+  if (!result) {
+    throw new Error('AIからのレスポンスが空です')
+  }
+
+  return JSON.parse(result)
+}
+
+async function analyzeWithClaude(image: string) {
+  const anthropic = getAnthropic()
+
+  // Extract base64 data from data URL
+  const base64Data = image.split(',')[1]
+  const mediaTypeMatch = image.match(/data:(.*?);/)?.[1] || 'image/jpeg'
+
+  // Map to supported media types
+  const mediaType = (
+    mediaTypeMatch === 'image/png' ? 'image/png' :
+    mediaTypeMatch === 'image/gif' ? 'image/gif' :
+    mediaTypeMatch === 'image/webp' ? 'image/webp' :
+    'image/jpeg'
+  ) as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
+
+  const response = await anthropic.messages.create({
+    model: 'claude-3-5-sonnet-20241022',
+    max_tokens: 1000,
+    system: SYSTEM_PROMPT,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: mediaType,
+              data: base64Data,
+            },
+          },
+          {
+            type: 'text',
+            text: 'この画像の名古屋ばえ度を採点してください。必ずJSON形式で返答してください。',
+          },
+        ],
+      },
+    ],
+  })
+
+  const result = response.content[0]
+  if (result.type !== 'text') {
+    throw new Error('AIからのレスポンスが不正です')
+  }
+
+  // Extract JSON from response (Claude might wrap it in markdown code blocks)
+  let jsonText = result.text.trim()
+  if (jsonText.startsWith('```json')) {
+    jsonText = jsonText.replace(/```json\n?/, '').replace(/\n?```$/, '')
+  } else if (jsonText.startsWith('```')) {
+    jsonText = jsonText.replace(/```\n?/, '').replace(/\n?```$/, '')
+  }
+
+  return JSON.parse(jsonText)
+}
+
+async function analyzeWithGemini(image: string) {
+  const genAI = getGoogleAI()
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+
+  // Extract base64 data from data URL
+  const base64Data = image.split(',')[1]
+  const mimeType = image.match(/data:(.*?);/)?.[1] || 'image/jpeg'
+
+  const result = await model.generateContent([
+    {
+      inlineData: {
+        data: base64Data,
+        mimeType,
+      },
+    },
+    SYSTEM_PROMPT + '\n\nこの画像の名古屋ばえ度を採点してください。必ずJSON形式で返答してください。',
+  ])
+
+  const response = await result.response
+  const text = response.text()
+
+  // Extract JSON from response (Gemini might wrap it in markdown code blocks)
+  let jsonText = text.trim()
+  if (jsonText.startsWith('```json')) {
+    jsonText = jsonText.replace(/```json\n?/, '').replace(/\n?```$/, '')
+  } else if (jsonText.startsWith('```')) {
+    jsonText = jsonText.replace(/```\n?/, '').replace(/\n?```$/, '')
+  }
+
+  return JSON.parse(jsonText)
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { image, provider = 'openai' } = await request.json()
+
+    if (!image) {
+      return NextResponse.json(
+        { error: '画像が送信されていません' },
+        { status: 400 }
+      )
     }
 
-    const parsedResult = JSON.parse(result)
+    let parsedResult
+
+    switch (provider) {
+      case 'openai':
+        parsedResult = await analyzeWithOpenAI(image)
+        break
+      case 'claude':
+        parsedResult = await analyzeWithClaude(image)
+        break
+      case 'gemini':
+        parsedResult = await analyzeWithGemini(image)
+        break
+      default:
+        return NextResponse.json(
+          { error: '無効なAIプロバイダーが指定されました' },
+          { status: 400 }
+        )
+    }
 
     return NextResponse.json(parsedResult)
   } catch (error) {
