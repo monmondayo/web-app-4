@@ -82,7 +82,7 @@ async function analyzeWithOpenAI(image: string) {
   return JSON.parse(result)
 }
 
-async function analyzeWithClaude(image: string) {
+async function analyzeWithClaude(image: string, modelName?: string) {
   const anthropic = getAnthropic()
 
   // Extract base64 data from data URL
@@ -98,7 +98,7 @@ async function analyzeWithClaude(image: string) {
   ) as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
   const response = await anthropic.messages.create({
-    model: 'claude-3-5-sonnet-20241022',
+    model: modelName || 'claude-haiku-4-5-20251001',
     max_tokens: 1000,
     system: SYSTEM_PROMPT,
     messages: [
@@ -140,7 +140,7 @@ async function analyzeWithClaude(image: string) {
 
 async function analyzeWithGemini(image: string) {
   const genAI = getGoogleAI()
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
   // Extract base64 data from data URL
   const base64Data = image.split(',')[1]
@@ -184,15 +184,46 @@ export async function POST(request: NextRequest) {
     let parsedResult
 
     switch (provider) {
-      case 'openai':
+      case 'openai': {
+        if (!process.env.OPENAI_API_KEY) {
+          return NextResponse.json(
+            { error: 'OpenAI API キーが設定されていません' },
+            { status: 500 }
+          )
+        }
         parsedResult = await analyzeWithOpenAI(image)
         break
-      case 'claude':
-        parsedResult = await analyzeWithClaude(image)
+      }
+      case 'claude-haiku': {
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return NextResponse.json(
+            { error: 'Anthropic API キーが設定されていません' },
+            { status: 500 }
+          )
+        }
+        parsedResult = await analyzeWithClaude(image, 'claude-haiku-4-5-20251001')
         break
-      case 'gemini':
+      }
+      case 'claude-sonnet': {
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return NextResponse.json(
+            { error: 'Anthropic API キーが設定されていません' },
+            { status: 500 }
+          )
+        }
+        parsedResult = await analyzeWithClaude(image, 'claude-sonnet-4-5-20250929')
+        break
+      }
+      case 'gemini': {
+        if (!process.env.GOOGLE_AI_API_KEY) {
+          return NextResponse.json(
+            { error: 'Google AI API キーが設定されていません' },
+            { status: 500 }
+          )
+        }
         parsedResult = await analyzeWithGemini(image)
         break
+      }
       default:
         return NextResponse.json(
           { error: '無効なAIプロバイダーが指定されました' },
@@ -202,9 +233,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(parsedResult)
   } catch (error) {
-    console.error('Error analyzing image:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Error analyzing image:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     return NextResponse.json(
-      { error: '画像の分析中にエラーが発生しました' },
+      { 
+        error: '画像の分析中にエラーが発生しました',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     )
   }
