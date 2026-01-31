@@ -104,7 +104,6 @@ export default function Home() {
   const [shareError, setShareError] = useState<string | null>(null)
   const [showDownloadModal, setShowDownloadModal] = useState(false)
   const resultCardRef = useRef<HTMLDivElement | null>(null)
-  const charImageRef = useRef<HTMLImageElement | null>(null)
 
   const handleImageUpload = useCallback(async (file: File) => {
     try {
@@ -219,35 +218,32 @@ export default function Home() {
   const handleDownloadCard = async (downloadType: 'full' | 'character') => {
     try {
       setShareError(null)
-      const { toPng } = await import('html-to-image')
-      
-      let dataUrl: string
+
+      let blob: Blob
       let filename: string
-      
+
       if (downloadType === 'full' && resultCardRef.current) {
         // 結果カード全体の固定幅で PNG 変換
-        dataUrl = await toPng(resultCardRef.current, { 
-          pixelRatio: 2, 
+        const { toPng } = await import('html-to-image')
+        const dataUrl = await toPng(resultCardRef.current, {
+          pixelRatio: 2,
           cacheBust: true,
           width: resultCardRef.current.offsetWidth,
           height: resultCardRef.current.offsetHeight,
         })
+        const res = await fetch(dataUrl)
+        blob = await res.blob()
         filename = 'nagoya-vibe-card.png'
-      } else if (downloadType === 'character' && charImageRef.current) {
-        dataUrl = await toPng(charImageRef.current, { 
-          pixelRatio: 2, 
-          cacheBust: true,
-          width: charImageRef.current.offsetWidth,
-          height: charImageRef.current.offsetHeight,
-        })
+      } else if (downloadType === 'character' && character?.characterUrl) {
+        // キャラクター画像のみを直接ダウンロード（特徴テキストは含まない）
+        const res = await fetch(character.characterUrl)
+        blob = await res.blob()
         filename = 'nagoya-character.png'
       } else {
         setShareError('ダウンロードする画像がありません')
         return
       }
-      
-      const res = await fetch(dataUrl)
-      const blob = await res.blob()
+
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -893,7 +889,7 @@ export default function Home() {
 
                   {/* 生成結果 */}
                   {character ? (
-                    <div className="space-y-1.5 pt-2 border-t border-white/10 flex-1" ref={charImageRef}>
+                    <div className="space-y-1.5 pt-2 border-t border-white/10 flex-1">
                       <img
                         src={character.characterUrl}
                         alt="生成キャラクター"
