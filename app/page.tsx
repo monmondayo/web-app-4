@@ -642,7 +642,7 @@ export default function Home() {
                         )}
                         {charProvider === 'openai' && (
                           <div className="text-xs text-gray-400">
-                            📌 OpenAI gpt-image-1 を使用します
+                            📌 OpenAI DALL-E 3 を使用します
                           </div>
                         )}
                         {/* 自動生成トグル */}
@@ -868,7 +868,7 @@ export default function Home() {
                           </select>
                         ) : (
                           <div className="w-full bg-gray-800 text-gray-400 border border-white/10 rounded p-1 text-xs">
-                            gpt-image-1
+                            DALL-E 3
                           </div>
                         )}
                       </div>
