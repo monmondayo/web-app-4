@@ -19,13 +19,13 @@
 
 ## 🛠️ 技術スタック
 
-- **Frontend**: Next.js 14 (App Router), React, TypeScript
+- **Frontend**: Next.js 16 (App Router), React 18, TypeScript
 - **Styling**: Tailwind CSS
 - **Animation**: Framer Motion
 - **AI**:
   - OpenAI API (GPT-4o)
-  - Anthropic API (Claude 3.5 Sonnet)
-  - Google AI API (Gemini 1.5 Flash)
+  - Anthropic API (Claude 3.5 Sonnet / Claude Haiku)
+  - Google AI API (Gemini 2.0 Flash)
 
 ## 📦 セットアップ
 
@@ -64,8 +64,9 @@ GOOGLE_AI_API_KEY=your_google_ai_api_key_here
 
 #### おすすめ
 
-- **Gemini 1.5 Flash**: 無料枠あり、高速で手軽に試せる
-- **Claude 3.5 Sonnet**: 高品質な画像分析、GPT-4oより安価な場合も
+- **Claude Haiku**: 高速で軽量、実用的な分析に最適
+- **Claude Sonnet**: 高品質な画像分析、詳細な評価が必要な場合
+- **Gemini 2.0 Flash**: 無料枠あり、高速で試しやすい
 - **GPT-4o**: 既存のOpenAIアカウントがあればすぐに使える
 
 ### 3. 開発サーバーの起動
@@ -81,8 +82,8 @@ npm run dev
 1. トップページで写真をアップロード(ドラッグ&ドロップまたはクリック)
 2. **使いたいAIを選択** 🤖🎭✨
    - 🤖 **OpenAI GPT-4o**: 定番の高精度AI
-   - 🎭 **Claude 3.5 Sonnet**: Anthropicの最新モデル
-   - ✨ **Gemini 1.5 Flash**: Googleの高速・無料枠ありAI
+   - 🎭 **Claude**: Anthropicの高品質分析（複数モデル対応）
+   - ✨ **Gemini**: Googleの高速AI
 3. 「名古屋ばえ診断スタート!」ボタンをクリック
 4. AIが分析中...🏯
 5. 結果が派手に表示されます!
@@ -106,11 +107,13 @@ AIは以下の基準で採点します:
 
 1. [Vercel](https://vercel.com)にログイン
 2. プロジェクトをインポート
-3. 環境変数を設定（使いたいAI APIのキーのみ設定）:
-   - `OPENAI_API_KEY`
-   - `ANTHROPIC_API_KEY`
-   - `GOOGLE_AI_API_KEY`
+3. **Environment Variables** を設定（使いたいAI APIのキーのみ設定）:
+   - `OPENAI_API_KEY` (OpenAI使用時)
+   - `ANTHROPIC_API_KEY` (Claude使用時)
+   - `GOOGLE_AI_API_KEY` (Gemini使用時)
 4. デプロイ!
+
+**注**: `.env` ファイルはリポジトリに含まれていません。Vercel上で環境変数を設定してください。
 
 ## 📝 ライセンス
 
