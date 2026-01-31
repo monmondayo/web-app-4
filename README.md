@@ -3,6 +3,7 @@
 「その写真、でら名古屋だがね!」
 
 ユーザーがアップロードした写真の「名古屋っぽさ(名古屋ばえ)」をAIが独断と偏見で採点する、エンタメWebアプリです。
+<img width="2048" height="1286" alt="nagoya-vibe-card (1)" src="https://github.com/user-attachments/assets/3c5052fd-c220-4b83-870c-b57cd862059d" />
 
 ## 🎯 コンセプト
 
