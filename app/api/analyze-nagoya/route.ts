@@ -3,6 +3,8 @@ import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
+export const runtime = 'nodejs'
+
 // Lazy initialization to avoid build-time errors
 function getOpenAI() {
   return new OpenAI({

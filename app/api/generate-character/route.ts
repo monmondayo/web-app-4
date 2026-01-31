@@ -3,8 +3,17 @@ import OpenAI from 'openai'
 import Anthropic from '@anthropic-ai/sdk'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+export const runtime = 'nodejs'
+
+// Lazy initialization to avoid build-time errors when env vars are missing
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+}
+
+function getAnthropic() {
+  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+}
+
 const getGoogleAI = () => {
   if (!process.env.GOOGLE_AI_API_KEY) {
     throw new Error('Google AI API キーが設定されていません')
@@ -28,6 +37,7 @@ async function describeImageWithClaude(image: string) {
     'image/jpeg'
   ) as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'
 
+  const anthropic = getAnthropic()
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 180,
@@ -62,6 +72,7 @@ async function describeImageWithClaude(image: string) {
 async function generateCharacterImage(description: string) {
   const prompt = `Create a kawaii, glittery Nagoya-inspired mascot character. Use elements from this description: ${description}. Style: chibi, gold accents, rich colors, lively expression. Avoid realism; no text overlay.`
 
+  const openai = getOpenAI()
   const img = await openai.images.generate({
     model: 'gpt-image-1',
     prompt,
