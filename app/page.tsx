@@ -92,6 +92,7 @@ export default function Home() {
   const [zoom, setZoom] = useState(1)
   const [originalImage, setOriginalImage] = useState<string | null>(null)
   const [cropFrameSize] = useState({ width: 300, height: 300 })  // 固定フレームサイズ
+  const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null)  // ピンチズーム用
   const [character, setCharacter] = useState<CharacterGenResult | null>(null)
   const [generatingChar, setGeneratingChar] = useState(false)
   const [characterError, setCharacterError] = useState<string | null>(null)
@@ -333,42 +334,73 @@ export default function Home() {
     setIsDrawing(false)
   }
 
+  // 2点間の距離を計算（ピンチズーム用）
+  const getTouchDistance = (touches: React.TouchList) => {
+    const dx = touches[0].clientX - touches[1].clientX
+    const dy = touches[0].clientY - touches[1].clientY
+    return Math.sqrt(dx * dx + dy * dy)
+  }
+
   // タッチイベントハンドラー（モバイル対応）
   const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault() // デフォルトのスクロール動作を防止
-    const touch = e.touches[0]
-    const canvas = e.currentTarget
-    const rect = canvas.getBoundingClientRect()
-    const x = touch.clientX - rect.left
-    const y = touch.clientY - rect.top
 
-    setIsDrawing(true)
-    setStartCoords({ x, y })
+    if (e.touches.length === 2) {
+      // ピンチズーム開始
+      const distance = getTouchDistance(e.touches)
+      setInitialPinchDistance(distance)
+      setIsDrawing(false)
+    } else if (e.touches.length === 1) {
+      // 1本指ドラッグ
+      const touch = e.touches[0]
+      const canvas = e.currentTarget
+      const rect = canvas.getBoundingClientRect()
+      const x = touch.clientX - rect.left
+      const y = touch.clientY - rect.top
+
+      setIsDrawing(true)
+      setStartCoords({ x, y })
+    }
   }
 
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return
     e.preventDefault()
 
-    const touch = e.touches[0]
-    const canvas = e.currentTarget
-    const rect = canvas.getBoundingClientRect()
-    const x = touch.clientX - rect.left
-    const y = touch.clientY - rect.top
+    if (e.touches.length === 2 && initialPinchDistance !== null) {
+      // ピンチズーム処理
+      const currentDistance = getTouchDistance(e.touches)
+      const scale = currentDistance / initialPinchDistance
 
-    const deltaX = x - startCoords.x
-    const deltaY = y - startCoords.y
+      setZoom((prevZoom) => {
+        const newZoom = prevZoom * scale
+        // ズーム範囲を0.5〜3に制限
+        return Math.min(3, Math.max(0.5, newZoom))
+      })
 
-    setCropOffset((prev) => ({
-      x: prev.x + deltaX,
-      y: prev.y + deltaY,
-    }))
+      setInitialPinchDistance(currentDistance)
+    } else if (e.touches.length === 1 && isDrawing) {
+      // 1本指ドラッグ処理
+      const touch = e.touches[0]
+      const canvas = e.currentTarget
+      const rect = canvas.getBoundingClientRect()
+      const x = touch.clientX - rect.left
+      const y = touch.clientY - rect.top
 
-    setStartCoords({ x, y })
+      const deltaX = x - startCoords.x
+      const deltaY = y - startCoords.y
+
+      setCropOffset((prev) => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY,
+      }))
+
+      setStartCoords({ x, y })
+    }
   }
 
   const handleTouchEnd = () => {
     setIsDrawing(false)
+    setInitialPinchDistance(null)
   }
 
   const applyCrop = () => {
