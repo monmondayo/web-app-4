@@ -333,6 +333,44 @@ export default function Home() {
     setIsDrawing(false)
   }
 
+  // タッチイベントハンドラー（モバイル対応）
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault() // デフォルトのスクロール動作を防止
+    const touch = e.touches[0]
+    const canvas = e.currentTarget
+    const rect = canvas.getBoundingClientRect()
+    const x = touch.clientX - rect.left
+    const y = touch.clientY - rect.top
+
+    setIsDrawing(true)
+    setStartCoords({ x, y })
+  }
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return
+    e.preventDefault()
+
+    const touch = e.touches[0]
+    const canvas = e.currentTarget
+    const rect = canvas.getBoundingClientRect()
+    const x = touch.clientX - rect.left
+    const y = touch.clientY - rect.top
+
+    const deltaX = x - startCoords.x
+    const deltaY = y - startCoords.y
+
+    setCropOffset((prev) => ({
+      x: prev.x + deltaX,
+      y: prev.y + deltaY,
+    }))
+
+    setStartCoords({ x, y })
+  }
+
+  const handleTouchEnd = () => {
+    setIsDrawing(false)
+  }
+
   const applyCrop = () => {
     if (!originalImage) {
       setError('画像が見つかりません')
@@ -1069,7 +1107,11 @@ export default function Home() {
                       onMouseMove={handleMouseMove}
                       onMouseUp={handleMouseUp}
                       onMouseLeave={handleMouseUp}
-                      style={{ cursor: isDrawing ? 'grabbing' : 'grab', display: 'block' }}
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      onTouchCancel={handleTouchEnd}
+                      style={{ cursor: isDrawing ? 'grabbing' : 'grab', display: 'block', touchAction: 'none' }}
                     />
                   </div>
                 </div>
