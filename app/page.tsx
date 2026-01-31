@@ -22,7 +22,7 @@ interface CharacterGenResult {
 const compressImage = (file: File, maxSizeMB: number = 4.5): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
-    reader.readAsImage = reader.onload = (e) => {
+    reader.onload = (e) => {
       const img = new Image()
       img.onload = () => {
         const canvas = document.createElement('canvas')
@@ -734,7 +734,7 @@ export default function Home() {
                   className="flex flex-col items-center gap-2"
                 >
                   <img
-                    src={image}
+                    src={image || ''}
                     alt="分析した画像"
                     className="w-full max-w-xs md:max-w-sm mx-auto rounded-lg border-4 border-nagoya-gold shadow-xl"
                   />
