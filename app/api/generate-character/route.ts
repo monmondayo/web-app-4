@@ -74,15 +74,15 @@ async function generateCharacterImage(description: string) {
 
   const openai = getOpenAI()
   const img = await openai.images.generate({
-    model: 'gpt-image-1',
+    model: 'dall-e-3',
     prompt,
     size: '1024x1024',
-    quality: 'high',
-  } as any)
+    quality: 'hd',
+  })
 
   const url = img.data?.[0]?.url
   if (!url) throw new Error('Image generation failed')
-  return { url, modelUsed: 'OpenAI gpt-image-1' }
+  return { url, modelUsed: 'OpenAI DALL-E 3' }
 }
 
 async function generateCharacterImageWithGemini(modelName: string, description: string) {
