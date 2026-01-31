@@ -17,6 +17,8 @@
 - 💬 **名古屋弁コメント**: 「わっち」が辛口で採点
 - 🎨 **派手な演出**: パチンコ台風のド派手なデザイン
 - ✨ **アニメーション**: Framer Motionによる豪華な演出
+- 🎭 **キャラクター生成**: 診断画像からオリジナルマスコットキャラを自動生成
+  - OpenAI DALL-E 3 または Gemini画像生成モデルを選択可能
 
 ## 🛠️ 技術スタック
 
@@ -24,9 +26,9 @@
 - **Styling**: Tailwind CSS
 - **Animation**: Framer Motion
 - **AI**:
-  - OpenAI API (GPT-4o)
+  - OpenAI API (GPT-4o / DALL-E 3)
   - Anthropic API (Claude 3.5 Sonnet / Claude Haiku)
-  - Google AI API (Gemini 2.0 Flash)
+  - Google AI API (Gemini 2.0 Flash / Gemini画像生成)
 
 ## 📦 セットアップ
 
